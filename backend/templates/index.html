@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remuneration Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #1e3a8a;
+      --blue-mid:   #2d52b5;
+      --blue-light: #e8edf8;
+      --blue-rule:  #c5d0ee;
+      --text:       #111827;
+      --muted:      #6b7280;
+      --bg:         #f9fafb;
+      --white:      #ffffff;
+      --radius:     4px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--blue);
+      padding: 2.5rem 3rem;
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: var(--white);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    header p.subtitle {
+      margin-top: 0.35rem;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    /* ── Main ── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2.5rem 3rem 4rem;
+    }
+
+    .intro {
+      max-width: 640px;
+      margin-bottom: 2.5rem;
+    }
+
+    .intro p {
+      font-size: 0.975rem;
+      line-height: 1.75;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 360px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    input[type="search"] {
+      width: 100%;
+      padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+      border: 1px solid var(--blue-rule);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 400;
+      background: var(--white);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="search"]:focus { border-color: var(--blue-mid); }
+
+    .count-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ── Table wrapper ── */
+    .table-wrap {
+      border: 1px solid var(--blue-rule);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      background: var(--white);
+      box-shadow: 0 1px 3px rgba(30,58,138,0.06);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      background: var(--blue);
+    }
+
+    th {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      color: var(--white);
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    th.sortable {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    th.sortable:hover { background: var(--blue-mid); }
+
+    th.sortable.active { background: var(--blue-mid); }
+
+    .sort-icon {
+      display: inline-block;
+      margin-left: 0.4rem;
+      opacity: 0.45;
+      font-size: 0.7rem;
+      vertical-align: middle;
+      transition: opacity 0.15s;
+    }
+
+    th.sortable:hover .sort-icon,
+    th.active .sort-icon { opacity: 1; }
+
+    /* ── Body rows ── */
+    tbody tr {
+      border-top: 1px solid var(--blue-light);
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: var(--blue-light); }
+
+    td {
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    td.company { white-space: normal; min-width: 220px; font-weight: 500; }
+    td.period  { color: var(--muted); font-size: 0.82rem; }
+    td.num     { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .pagination button {
+      padding: 0.4rem 0.85rem;
+      border: 1px solid var(--blue-rule);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--blue);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: var(--blue);
+      color: var(--white);
+      border-color: var(--blue);
+    }
+
+    .pagination button:disabled { opacity: 0.35; cursor: default; }
+    .pagination button.active   { background: var(--blue); color: var(--white); border-color: var(--blue); }
+
+    .page-info {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 0 0.5rem;
+    }
+
+    /* ── States ── */
+    .state-row td {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--blue-rule);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Remuneration Report</h1>
+    <p class="subtitle">Gender pay gap data · Australia</p>
+  </header>
+
+  <main>
+    <div class="intro">
+      <p>
+        This report presents average total remuneration figures by quartile for Australian employers,
+        sourced from WGEA gender pay gap disclosure data. Use the column headers to sort by compensation
+        band, or search by company name below.
+      </p>
+    </div>
+
+    <div class="controls">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="search" placeholder="Search company…" autocomplete="off" />
+      </div>
+      <span class="count-label" id="count-label"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Company Name</th>
+            <th class="sortable" data-col="avg_total">
+              Avg. Total Comp. <span class="sort-icon">↕</span>
+            </th>
+            <th class="sortable" data-col="lower">
+              Lower Quartile <span class="sort-icon">↕</span>
+            </th>
+            <th class="sortable" data-col="lower_mid">
+              Lower Mid Quartile <span class="sort-icon">↕</span>
+            </th>
+            <th class="sortable" data-col="upper_mid">
+              Upper Mid Quartile <span class="sort-icon">↕</span>
+            </th>
+            <th class="sortable" data-col="upper">
+              Upper Quartile <span class="sort-icon">↕</span>
+            </th>
+            <th>Reporting Period</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+  <script>
+    const API = 'http://127.0.0.1:5000/api';
+    const PAGE_SIZE = 50;
+
+    let state = {
+      page: 1,
+      total: 0,
+      sortBy: 'company_name',
+      order: 'asc',
+      search: '',
+    };
+
+    // ── Fetch ────────────────────────────────────────────────────────────────
+
+    async function fetchData() {
+      const params = new URLSearchParams({
+        sort_by:   state.sortBy,
+        order:     state.order,
+        page:      state.page,
+        page_size: PAGE_SIZE,
+        search:    state.search,
+      });
+
+      const [dataRes, countRes] = await Promise.all([
+        fetch(`${API}/remuneration?${params}`),
+        fetch(`${API}/remuneration/count?search=${encodeURIComponent(state.search)}`),
+      ]);
+
+      const { data } = await dataRes.json();
+      const { total } = await countRes.json();
+      state.total = total;
+      return data;
+    }
+
+    // ── Render ───────────────────────────────────────────────────────────────
+
+    function fmt(val) {
+      console.log(val)
+      if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
+      return '$' + Math.round(val).toLocaleString('en-AU');
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('tbody');
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr class="state-row"><td colspan="7">No results found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td class="company">${escHtml(r.company_name)}</td>
+          <td class="num">${fmt(r.avg_total)}</td>
+          <td class="num">${fmt(r.lower)}</td>
+          <td class="num">${fmt(r.lower_mid)}</td>
+          <td class="num">${fmt(r.upper_mid)}</td>
+          <td class="num">${fmt(r.upper)}</td>
+          <td class="period">${escHtml(r.reporting_period)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(state.total / PAGE_SIZE);
+      const pg = document.getElementById('pagination');
+      if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+      // Show at most 7 page buttons centred around current page
+      let start = Math.max(1, state.page - 3);
+      let end   = Math.min(totalPages, start + 6);
+      if (end - start < 6) start = Math.max(1, end - 6);
+
+      let html = `<button id="pg-prev" ${state.page === 1 ? 'disabled' : ''}>← Prev</button>`;
+
+      if (start > 1) html += `<button onclick="goPage(1)">1</button><span class="page-info">…</span>`;
+
+      for (let i = start; i <= end; i++) {
+        html += `<button onclick="goPage(${i})" class="${i === state.page ? 'active' : ''}">${i}</button>`;
+      }
+
+      if (end < totalPages) html += `<span class="page-info">…</span><button onclick="goPage(${totalPages})">${totalPages}</button>`;
+
+      html += `<button id="pg-next" ${state.page === totalPages ? 'disabled' : ''}>Next →</button>`;
+
+      pg.innerHTML = html;
+      pg.querySelector('#pg-prev')?.addEventListener('click', () => goPage(state.page - 1));
+      pg.querySelector('#pg-next')?.addEventListener('click', () => goPage(state.page + 1));
+    }
+
+    function renderSortHeaders() {
+      document.querySelectorAll('th.sortable').forEach(th => {
+        const col = th.dataset.col;
+        const icon = th.querySelector('.sort-icon');
+        th.classList.toggle('active', col === state.sortBy);
+        if (col === state.sortBy) {
+          icon.textContent = state.order === 'asc' ? '↑' : '↓';
+        } else {
+          icon.textContent = '↕';
+        }
+      });
+    }
+
+    function updateCountLabel() {
+      const start = (state.page - 1) * PAGE_SIZE + 1;
+      const end   = Math.min(state.page * PAGE_SIZE, state.total);
+      document.getElementById('count-label').textContent =
+        state.total ? `${start}–${end} of ${state.total.toLocaleString()} companies` : '';
+    }
+
+    // ── Orchestrate ──────────────────────────────────────────────────────────
+
+    async function load() {
+      document.getElementById('tbody').innerHTML =
+        `<tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading…</td></tr>`;
+
+      const rows = await fetchData();
+      renderTable(rows);
+      renderPagination();
+      renderSortHeaders();
+      updateCountLabel();
+    }
+
+    function goPage(n) {
+      state.page = n;
+      load();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── Events ───────────────────────────────────────────────────────────────
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (state.sortBy === col) {
+          state.order = state.order === 'asc' ? 'desc' : 'asc';
+        } else {
+          state.sortBy = col;
+          state.order = 'asc';
+        }
+        state.page = 1;
+        load();
+      });
+    });
+
+    let searchTimer;
+    document.getElementById('search').addEventListener('input', e => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.search = e.target.value.trim();
+        state.page = 1;
+        load();
+      }, 300);
+    });
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function escHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    load();
+  </script>
+</body>
+</html>
