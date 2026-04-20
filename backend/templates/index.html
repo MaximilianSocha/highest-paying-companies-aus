@@ -346,9 +346,8 @@
     // ── Render ───────────────────────────────────────────────────────────────
 
     function fmt(val) {
-      console.log(val)
       if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
-      return '$' + Math.round(val).toLocaleString('en-AU');
+      return '$' + val.toLocaleString('en-AU');
     }
 
     function renderTable(rows) {

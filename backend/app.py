@@ -21,17 +21,15 @@ Endpoints:
 import sqlite3
 from pathlib import Path
 from flask import Flask, jsonify, render_template, request
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://127.0.0.1:5000"}})
 
 DB_PATH = Path(__file__).parent / "data.db"
 
 # Map of API sort_by values → SQLite column/expression
 SORT_COLUMNS = {
     "company_name": "company_name",
-    "avg_total": "avg_total_remuneration",
+    "avg_total": "avg_total",
     "lower": "lower_q",
     "lower_mid": "lower_mid_q",
     "upper_mid": "upper_mid_q",
@@ -75,15 +73,15 @@ def build_pivoted_query(
     sql = f"""
         SELECT
             company_name,
-            reporting_period,
+            MAX(reporting_period) AS reporting_period,
             MAX(CASE WHEN remuneration_quartile = 'Lower quartile'           THEN avg_total_remuneration END) AS lower_q,
             MAX(CASE WHEN remuneration_quartile = 'Lower middle quartile'    THEN avg_total_remuneration END) AS lower_mid_q,
             MAX(CASE WHEN remuneration_quartile = 'Upper middle quartile'    THEN avg_total_remuneration END) AS upper_mid_q,
             MAX(CASE WHEN remuneration_quartile = 'Upper quartile'           THEN avg_total_remuneration END) AS upper_q,
-            MAX(avg_total_remuneration)                                                                        AS avg_total_remuneration
+            MAX(CASE WHEN remuneration_quartile = 'Total workforce'          THEN avg_total_remuneration END) AS avg_total
         FROM remuneration
         {where_clause}
-        GROUP BY company_name, reporting_period
+        GROUP BY company_name
         ORDER BY {sort_col} {order} NULLS LAST
         LIMIT ? OFFSET ?
     """
@@ -126,7 +124,7 @@ def get_remuneration():
             {
                 "company_name": row["company_name"],
                 "reporting_period": row["reporting_period"],
-                "avg_total": row["avg_total_remuneration"],
+                "avg_total": row["avg_total"],
                 "lower": row["lower_q"],
                 "lower_mid": row["lower_mid_q"],
                 "upper_mid": row["upper_mid_q"],
