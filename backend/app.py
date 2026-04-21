@@ -9,7 +9,7 @@ Endpoints:
     GET /api/remuneration
         Query params:
             sort_by   — column to sort by (default: company_name)
-                        valid values: avg_total, lower, lower_mid, upper_mid, upper, reporting_period
+                        valid values: avg_all, lower, lower_mid, upper_mid, upper, reporting_period
             order     — asc | desc (default: asc)
             page      — page number, 1-indexed (default: 1)
             page_size — rows per page (default: 50)
@@ -29,7 +29,7 @@ DB_PATH = Path(__file__).parent / "data.db"
 # Map of API sort_by values → SQLite column/expression
 SORT_COLUMNS = {
     "company_name": "company_name",
-    "avg_total": "avg_total",
+    "avg_all": "avg_all",
     "lower": "lower_q",
     "lower_mid": "lower_mid_q",
     "upper_mid": "upper_mid_q",
@@ -74,11 +74,11 @@ def build_pivoted_query(
         SELECT
             company_name,
             MAX(reporting_period) AS reporting_period,
-            MAX(CASE WHEN remuneration_quartile = 'Lower quartile'           THEN avg_total_remuneration END) AS lower_q,
-            MAX(CASE WHEN remuneration_quartile = 'Lower middle quartile'    THEN avg_total_remuneration END) AS lower_mid_q,
-            MAX(CASE WHEN remuneration_quartile = 'Upper middle quartile'    THEN avg_total_remuneration END) AS upper_mid_q,
-            MAX(CASE WHEN remuneration_quartile = 'Upper quartile'           THEN avg_total_remuneration END) AS upper_q,
-            MAX(CASE WHEN remuneration_quartile = 'Total workforce'          THEN avg_total_remuneration END) AS avg_total
+            MAX(CASE WHEN remuneration_quartile = 'Lower quartile'           THEN avg_remuneration END) AS lower_q,
+            MAX(CASE WHEN remuneration_quartile = 'Lower middle quartile'    THEN avg_remuneration END) AS lower_mid_q,
+            MAX(CASE WHEN remuneration_quartile = 'Upper middle quartile'    THEN avg_remuneration END) AS upper_mid_q,
+            MAX(CASE WHEN remuneration_quartile = 'Upper quartile'           THEN avg_remuneration END) AS upper_q,
+            MAX(CASE WHEN remuneration_quartile = 'Total workforce'          THEN avg_remuneration END) AS avg_all
         FROM remuneration
         {where_clause}
         GROUP BY company_name
@@ -124,7 +124,7 @@ def get_remuneration():
             {
                 "company_name": row["company_name"],
                 "reporting_period": row["reporting_period"],
-                "avg_total": row["avg_total"],
+                "avg_all": row["avg_all"],
                 "lower": row["lower_q"],
                 "lower_mid": row["lower_mid_q"],
                 "upper_mid": row["upper_mid_q"],

@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS remuneration (
     company_name            TEXT,
     reporting_period        TEXT,
     remuneration_quartile   TEXT,
-    avg_total_remuneration  REAL,
+    avg_remuneration        REAL,
     FOREIGN KEY (abn) REFERENCES abn_cache(abn)
 );
 """
@@ -172,7 +172,7 @@ def run_etl(csv_path: str, guid: str, db_path: str) -> None:
         "abn",
         "remuneration_quartile",
         "reporting_period",
-        "avg_total_remuneration",
+        "avg_remuneration",
     }
     missing = required - set(df.columns)
     if missing:
@@ -194,9 +194,8 @@ def run_etl(csv_path: str, guid: str, db_path: str) -> None:
     df["company_name"] = df["abn"].map(abn_map)
     unresolved = df["company_name"].isna().sum()
     if unresolved:
-        print(
-            f"[WARN] {unresolved:,} rows have unresolved ABNs — company_name will be NULL"
-        )
+        print(f"[INFO] Dropping {unresolved:,} rows with unresolved ABNs")
+        df = df[df["company_name"].notna()]
 
     # 5. Write remuneration data
     print(f"\n[DB] Writing {len(df):,} rows to remuneration table ...")
@@ -210,7 +209,7 @@ def run_etl(csv_path: str, guid: str, db_path: str) -> None:
             "company_name",
             "reporting_period",
             "remuneration_quartile",
-            "avg_total_remuneration",
+            "avg_remuneration",
         ]
     ].to_sql(
         "remuneration",

@@ -282,7 +282,7 @@
         <thead>
           <tr>
             <th>Company Name</th>
-            <th class="sortable" data-col="avg_total">
+            <th class="sortable" data-col="avg_all">
               Avg. Total Comp. <span class="sort-icon">↕</span>
             </th>
             <th class="sortable" data-col="lower">
@@ -361,7 +361,7 @@
       tbody.innerHTML = rows.map(r => `
         <tr>
           <td class="company">${escHtml(r.company_name)}</td>
-          <td class="num">${fmt(r.avg_total)}</td>
+          <td class="num">${fmt(r.avg_all)}</td>
           <td class="num">${fmt(r.lower)}</td>
           <td class="num">${fmt(r.lower_mid)}</td>
           <td class="num">${fmt(r.upper_mid)}</td>
