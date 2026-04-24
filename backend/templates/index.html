@@ -138,20 +138,6 @@
       overflow-x: auto;
       background: var(--white);
       box-shadow: 0 1px 3px rgba(30,58,138,0.06);
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Show scroll hint on small screens */
-    @media (max-width: 768px) {
-      .table-wrap::after {
-        content: 'Scroll to see more →';
-        display: block;
-        text-align: center;
-        font-size: 0.75rem;
-        color: var(--muted);
-        padding: 0.5rem;
-        border-top: 1px solid var(--blue-light);
-      }
     }
 
     table {
@@ -278,6 +264,21 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+    table {
+      font-size: 0.65rem;
+    }
+
+    th {
+      font-size: 0.6rem;
+      padding: 0.6rem 0.5rem;
+    }
+
+    td {
+      padding: 0.6rem 0.5rem;
+    }
+  }
   </style>
 </head>
 <body>
