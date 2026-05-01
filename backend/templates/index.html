@@ -510,7 +510,7 @@
       }
 
       menu.addEventListener('change', e => {
-        if (menuId !== 'period-menu' && e.target === allCheck) {
+        if (menuId !== 'period-menu' && e.target.value === allCheck.value) {
           menu.querySelectorAll(`input[type="checkbox"][value="${e.target.value}"]`).forEach(cb => cb.checked = true);
           return;
         }
