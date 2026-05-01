@@ -418,12 +418,8 @@
       </div>
 
       <div class="dropdown-wrap">
-        <button class="dropdown-trigger" id="period-trigger">Period: All <span class="arrow">&#9662;</span></button>
-        <div class="dropdown-menu" id="period-menu">
-          <label class="dropdown-option all-option">
-            <input type="checkbox" id="period-all" checked /> All
-          </label>
-        </div>
+        <button class="dropdown-trigger" id="period-trigger">Period:<span class="arrow">&#9662;</span></button>
+        <div class="dropdown-menu" id="period-menu"></div>
       </div>
 
       <span class="count-label" id="count-label"></span>
@@ -449,11 +445,10 @@
             <th class="sortable" data-col="upper">
               Upper Quartile <span class="sort-icon">&#8597;</span>
             </th>
-            <th>Reporting Period</th>
           </tr>
         </thead>
         <tbody id="tbody">
-          <tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading&#8230;</td></tr>
+          <tr class="state-row"><td colspan="6"><span class="spinner"></span> Loading&#8230;</td></tr>
         </tbody>
       </table>
     </div>
@@ -481,7 +476,7 @@
     function buildDropdown(menuId, triggerId, allCheckId, items, stateKey, labelPrefix) {
       const menu = document.getElementById(menuId);
       const trigger = document.getElementById(triggerId);
-      const allCheck = document.getElementById(allCheckId);
+      let allCheck;
 
       items.forEach(item => {
         const label = document.createElement('label');
@@ -495,29 +490,54 @@
         menu.appendChild(label);
       });
 
-      allCheck.addEventListener('change', () => {
-        if (allCheck.checked) {
-          menu.querySelectorAll('input[type="checkbox"]:not(#' + allCheckId + ')').forEach(cb => cb.checked = false);
-          state[stateKey] = [];
-          trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
-          state.page = 1;
-          load();
-        }
-      });
+      if (menuId !== 'period-menu') {
+        allCheck = document.getElementById(allCheckId);
+        allCheck.addEventListener('change', () => {
+          if (allCheck.checked) {
+            menu.querySelectorAll('input[type="checkbox"]:not(#' + allCheckId + ')').forEach(cb => cb.checked = false);
+            state[stateKey] = [];
+            trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
+            state.page = 1;
+            load();
+          }
+        });
+      } else {
+        allCheck = undefined;
+        // Set period default
+        trigger.innerHTML = labelPrefix + ': ' + items[0] + ' <span class="arrow">&#9662;</span>'
+        menu.querySelectorAll(`input[type="checkbox"][value="${items[0]}"]`).forEach(cb => cb.checked = true);
+        state[stateKey] = [items[0]]
+      }
 
       menu.addEventListener('change', e => {
-        if (e.target === allCheck) return;
+        if (menuId !== 'period-menu' && e.target === allCheck) return;
         const checked = [...menu.querySelectorAll('input[data-group="' + stateKey + '"]:checked')].map(c => c.value);
         if (checked.length === 0) {
-          allCheck.checked = true;
-          state[stateKey] = [];
-          trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
+          if (menuId === 'period-menu') {
+            state[stateKey] = [e.target.value];
+            trigger.innerHTML = labelPrefix + ': ' + e.target.value + ' <span class="arrow">&#9662;</span>'
+            menu.querySelectorAll(`input[type="checkbox"][value="${e.target.value}"]`).forEach(cb => cb.checked = true);
+          } else{
+            allCheck.checked = true;
+            state[stateKey] = [];
+            trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
+          }
         } else {
-          allCheck.checked = false;
-          state[stateKey] = checked;
-          trigger.innerHTML = checked.length === 1
-            ? labelPrefix + ': ' + checked[0] + ' <span class="arrow">&#9662;</span>'
-            : labelPrefix + ': ' + checked.length + ' selected <span class="arrow">&#9662;</span>';
+          if (menuId === 'period-menu') {
+            state[stateKey] = [e.target.value];
+            trigger.innerHTML = labelPrefix + ': ' + e.target.value + ' <span class="arrow">&#9662;</span>'
+            if (e.target.value === checked[0]) {
+              menu.querySelectorAll(`input[type="checkbox"][value="${checked[1]}"]`).forEach(cb => cb.checked = false);
+            } else{
+              menu.querySelectorAll(`input[type="checkbox"][value="${checked[0]}"]`).forEach(cb => cb.checked = false);
+            }
+          } else {
+            allCheck.checked = false;
+            state[stateKey] = checked;
+            trigger.innerHTML = checked.length === 1
+              ? labelPrefix + ': ' + checked[0] + ' <span class="arrow">&#9662;</span>'
+              : labelPrefix + ': ' + checked.length + ' selected <span class="arrow">&#9662;</span>';
+          }
         }
         state.page = 1;
         load();
@@ -542,7 +562,7 @@
       const { sectors, employer_sizes, reporting_periods } = await res.json();
       buildDropdown('sector-menu', 'sector-trigger', 'sector-all', sectors, 'sectors', 'Sector');
       buildDropdown('size-menu', 'size-trigger', 'size-all', employer_sizes, 'employerSizes', 'Size');
-      buildDropdown('period-menu', 'period-trigger', 'period-all', reporting_periods, 'reportingPeriods', 'Period');
+      buildDropdown('period-menu', 'period-trigger', '', reporting_periods, 'reportingPeriods', 'Period');
     }
 
     // ── Fetch ────────────────────────────────────────────────────────────────
@@ -585,7 +605,7 @@
     function renderTable(rows) {
       const tbody = document.getElementById('tbody');
       if (!rows.length) {
-        tbody.innerHTML = '<tr class="state-row"><td colspan="7">No results found.</td></tr>';
+        tbody.innerHTML = '<tr class="state-row"><td colspan="6">No results found.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(r => `
@@ -596,7 +616,6 @@
           <td class="num">${fmt(r.lower_mid)}</td>
           <td class="num">${fmt(r.upper_mid)}</td>
           <td class="num">${fmt(r.upper)}</td>
-          <td class="period">${escHtml(r.reporting_period)}</td>
         </tr>
       `).join('');
     }
@@ -643,7 +662,7 @@
 
     async function load() {
       document.getElementById('tbody').innerHTML =
-        '<tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading&#8230;</td></tr>';
+        '<tr class="state-row"><td colspan="6"><span class="spinner"></span> Loading&#8230;</td></tr>';
       const rows = await fetchData();
       renderTable(rows);
       renderPagination();
