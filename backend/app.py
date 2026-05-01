@@ -225,7 +225,7 @@ def get_filters():
         sizes = [
             r[0]
             for r in conn.execute(
-                "SELECT DISTINCT employer_size FROM remuneration WHERE employer_size IS NOT NULL ORDER BY employer_size"
+                "SELECT DISTINCT employer_size FROM remuneration WHERE employer_size IS NOT NULL ORDER BY CASE employer_size WHEN '<250' THEN 1 WHEN '250 - 499' THEN 2 WHEN '500 - 999' THEN 3 WHEN '1000 - 4999' THEN 4 ELSE 5 END"
             ).fetchall()
         ]
         periods = [
