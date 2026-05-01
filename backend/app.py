@@ -51,7 +51,14 @@ def index():
 
 
 def build_pivoted_query(
-    search: str | None, sort_col: str, order: str, limit: int, offset: int
+    search: str | None,
+    sort_col: str,
+    order: str,
+    limit: int,
+    offset: int,
+    sectors: list | None = None,
+    employer_sizes: list | None = None,
+    reporting_periods: list | None = None,
 ) -> tuple[str, list]:
     """
     The raw data has one row per (abn, quartile, reporting_period).
@@ -63,6 +70,21 @@ def build_pivoted_query(
     if search:
         where_clause += " AND LOWER(company_name) LIKE LOWER(?)"
         params.append(f"%{search}%")
+
+    if sectors:
+        placeholders = ",".join("?" * len(sectors))
+        where_clause += f" AND sector IN ({placeholders})"
+        params.extend(sectors)
+
+    if employer_sizes:
+        placeholders = ",".join("?" * len(employer_sizes))
+        where_clause += f" AND employer_size IN ({placeholders})"
+        params.extend(employer_sizes)
+
+    if reporting_periods:
+        placeholders = ",".join("?" * len(reporting_periods))
+        where_clause += f" AND reporting_period IN ({placeholders})"
+        params.extend(reporting_periods)
 
     # Validate sort + order to prevent SQL injection
     if sort_col not in SORT_COLUMNS.values():
@@ -89,12 +111,32 @@ def build_pivoted_query(
     return sql, params
 
 
-def build_count_query(search: str | None) -> tuple[str, list]:
+def build_count_query(
+    search: str | None,
+    sectors: list | None = None,
+    employer_sizes: list | None = None,
+    reporting_periods: list | None = None,
+) -> tuple[str, list]:
     where_clause = "WHERE company_name IS NOT NULL"
     params: list = []
     if search:
         where_clause += " AND LOWER(company_name) LIKE LOWER(?)"
         params.append(f"%{search}%")
+
+    if sectors:
+        placeholders = ",".join("?" * len(sectors))
+        where_clause += f" AND sector IN ({placeholders})"
+        params.extend(sectors)
+
+    if employer_sizes:
+        placeholders = ",".join("?" * len(employer_sizes))
+        where_clause += f" AND employer_size IN ({placeholders})"
+        params.extend(employer_sizes)
+
+    if reporting_periods:
+        placeholders = ",".join("?" * len(reporting_periods))
+        where_clause += f" AND reporting_period IN ({placeholders})"
+        params.extend(reporting_periods)
 
     sql = f"""
         SELECT COUNT(DISTINCT company_name || '|' || reporting_period)
@@ -111,13 +153,25 @@ def get_remuneration():
     page = max(1, int(request.args.get("page", 1)))
     page_size = min(200, max(1, int(request.args.get("page_size", 50))))
     search = request.args.get("search", "").strip() or None
+    sectors = request.args.getlist("sector") or None
+    employer_sizes = request.args.getlist("employer_size") or None
+    reporting_periods = request.args.getlist("reporting_period") or None
 
     sort_col = SORT_COLUMNS.get(sort_by, "company_name")
     offset = (page - 1) * page_size
 
     conn = get_db()
     try:
-        sql, params = build_pivoted_query(search, sort_col, order, page_size, offset)
+        sql, params = build_pivoted_query(
+            search,
+            sort_col,
+            order,
+            page_size,
+            offset,
+            sectors=sectors,
+            employer_sizes=employer_sizes,
+            reporting_periods=reporting_periods,
+        )
         rows = conn.execute(sql, params).fetchall()
 
         data = [
@@ -140,11 +194,49 @@ def get_remuneration():
 @app.route("/api/remuneration/count")
 def get_count():
     search = request.args.get("search", "").strip() or None
+    sectors = request.args.getlist("sector") or None
+    employer_sizes = request.args.getlist("employer_size") or None
+    reporting_periods = request.args.getlist("reporting_period") or None
     conn = get_db()
     try:
-        sql, params = build_count_query(search)
+        sql, params = build_count_query(
+            search,
+            sectors=sectors,
+            employer_sizes=employer_sizes,
+            reporting_periods=reporting_periods,
+        )
         total = conn.execute(sql, params).fetchone()[0]
         return jsonify({"total": total})
+    finally:
+        conn.close()
+
+
+@app.route("/api/filters")
+def get_filters():
+    """Return distinct values for sector, employer_size, and reporting_period filters."""
+    conn = get_db()
+    try:
+        sectors = [
+            r[0]
+            for r in conn.execute(
+                "SELECT DISTINCT sector FROM remuneration WHERE sector IS NOT NULL ORDER BY sector"
+            ).fetchall()
+        ]
+        sizes = [
+            r[0]
+            for r in conn.execute(
+                "SELECT DISTINCT employer_size FROM remuneration WHERE employer_size IS NOT NULL ORDER BY employer_size"
+            ).fetchall()
+        ]
+        periods = [
+            r[0]
+            for r in conn.execute(
+                "SELECT DISTINCT reporting_period FROM remuneration WHERE reporting_period IS NOT NULL ORDER BY reporting_period DESC"
+            ).fetchall()
+        ]
+        return jsonify(
+            {"sectors": sectors, "employer_sizes": sizes, "reporting_periods": periods}
+        )
     finally:
         conn.close()
 

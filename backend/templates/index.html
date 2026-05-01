@@ -131,6 +131,83 @@
       white-space: nowrap;
     }
 
+    /* ── Dropdowns ── */
+    .dropdown-wrap {
+      position: relative;
+      min-width: 100px;
+    }
+
+    .dropdown-trigger {
+      width: 100%;
+      padding: 0.55rem 0.75rem 0.55rem 0.75rem;
+      border: 1px solid var(--blue-rule);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 400;
+      background: var(--white);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      outline: none;
+      transition: border-color 0.15s;
+      position: relative;
+    }
+
+    .dropdown-trigger:focus,
+    .dropdown-trigger.open { border-color: var(--blue-mid); }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 100%;
+      max-width: 360px;
+      max-height: 260px;
+      overflow-y: auto;
+      background: var(--white);
+      border: 1px solid var(--blue-rule);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(30,58,138,0.1);
+      z-index: 100;
+    }
+
+    .dropdown-menu.open { display: block; }
+
+    .dropdown-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.1s;
+      white-space: nowrap;
+    }
+
+    .dropdown-option:hover { background: var(--blue-light); }
+
+    .dropdown-option input[type="checkbox"] {
+      accent-color: var(--blue);
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .dropdown-option.all-option {
+      font-weight: 500;
+      border-bottom: 1px solid var(--blue-light);
+    }
+
+    .arrow {
+      margin-left: 10px;
+    }
+
     /* ── Table wrapper ── */
     .table-wrap {
       border: 1px solid var(--blue-rule);
@@ -301,9 +378,7 @@
       </p>
     </div>
 
-    </div>
-
-    <!-- Google AdSense banner — replace with your ad unit snippet -->
+    <!-- Google AdSense banner -->
     <div class="ad-banner">
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR_CLIENT_ID"
            crossorigin="anonymous"></script>
@@ -317,14 +392,40 @@
     </div>
 
     <div class="controls">
-
-    <div class="controls">
       <div class="search-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="search" id="search" placeholder="Search company…" autocomplete="off" />
+        <input type="search" id="search" placeholder="Search company..." autocomplete="off" />
       </div>
+
+      <div class="dropdown-wrap">
+        <button class="dropdown-trigger" id="sector-trigger">Sector: All <span class="arrow">&#9662;</span></button>
+        <div class="dropdown-menu" id="sector-menu">
+          <label class="dropdown-option all-option">
+            <input type="checkbox" id="sector-all" checked /> All
+          </label>
+        </div>
+      </div>
+
+      <div class="dropdown-wrap">
+        <button class="dropdown-trigger" id="size-trigger">Size: All <span class="arrow">&#9662;</span></button>
+        <div class="dropdown-menu" id="size-menu">
+          <label class="dropdown-option all-option">
+            <input type="checkbox" id="size-all" checked /> All
+          </label>
+        </div>
+      </div>
+
+      <div class="dropdown-wrap">
+        <button class="dropdown-trigger" id="period-trigger">Period: All <span class="arrow">&#9662;</span></button>
+        <div class="dropdown-menu" id="period-menu">
+          <label class="dropdown-option all-option">
+            <input type="checkbox" id="period-all" checked /> All
+          </label>
+        </div>
+      </div>
+
       <span class="count-label" id="count-label"></span>
     </div>
 
@@ -334,25 +435,25 @@
           <tr>
             <th>Company Name</th>
             <th class="sortable" data-col="avg_all">
-              Avg. Total Comp. <span class="sort-icon">↕</span>
+              Avg. Total Comp. <span class="sort-icon">&#8597;</span>
             </th>
             <th class="sortable" data-col="lower">
-              Lower Quartile <span class="sort-icon">↕</span>
+              Lower Quartile <span class="sort-icon">&#8597;</span>
             </th>
             <th class="sortable" data-col="lower_mid">
-              Lower Mid Quartile <span class="sort-icon">↕</span>
+              Lower Mid Quartile <span class="sort-icon">&#8597;</span>
             </th>
             <th class="sortable" data-col="upper_mid">
-              Upper Mid Quartile <span class="sort-icon">↕</span>
+              Upper Mid Quartile <span class="sort-icon">&#8597;</span>
             </th>
             <th class="sortable" data-col="upper">
-              Upper Quartile <span class="sort-icon">↕</span>
+              Upper Quartile <span class="sort-icon">&#8597;</span>
             </th>
             <th>Reporting Period</th>
           </tr>
         </thead>
         <tbody id="tbody">
-          <tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading…</td></tr>
+          <tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading&#8230;</td></tr>
         </tbody>
       </table>
     </div>
@@ -361,7 +462,7 @@
   </main>
 
   <script>
-    const API = 'https://highest-paying-companies-aus.com/api';
+    const API = 'http://127.0.0.1:5000/api';
     const PAGE_SIZE = 50;
 
     let state = {
@@ -370,7 +471,79 @@
       sortBy: 'avg_all',
       order: 'desc',
       search: '',
+      sectors: [],
+      employerSizes: [],
+      reportingPeriods: [],
     };
+
+    // ── Dropdown helpers ─────────────────────────────────────────────────────
+
+    function buildDropdown(menuId, triggerId, allCheckId, items, stateKey, labelPrefix) {
+      const menu = document.getElementById(menuId);
+      const trigger = document.getElementById(triggerId);
+      const allCheck = document.getElementById(allCheckId);
+
+      items.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'dropdown-option';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = item;
+        cb.dataset.group = stateKey;
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(' ' + item));
+        menu.appendChild(label);
+      });
+
+      allCheck.addEventListener('change', () => {
+        if (allCheck.checked) {
+          menu.querySelectorAll('input[type="checkbox"]:not(#' + allCheckId + ')').forEach(cb => cb.checked = false);
+          state[stateKey] = [];
+          trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
+          state.page = 1;
+          load();
+        }
+      });
+
+      menu.addEventListener('change', e => {
+        if (e.target === allCheck) return;
+        const checked = [...menu.querySelectorAll('input[data-group="' + stateKey + '"]:checked')].map(c => c.value);
+        if (checked.length === 0) {
+          allCheck.checked = true;
+          state[stateKey] = [];
+          trigger.innerHTML = labelPrefix + ': All <span class="arrow">&#9662;</span>';
+        } else {
+          allCheck.checked = false;
+          state[stateKey] = checked;
+          trigger.innerHTML = checked.length === 1
+            ? labelPrefix + ': ' + checked[0] + ' <span class="arrow">&#9662;</span>'
+            : labelPrefix + ': ' + checked.length + ' selected <span class="arrow">&#9662;</span>';
+        }
+        state.page = 1;
+        load();
+      });
+
+      trigger.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = menu.classList.toggle('open');
+        trigger.classList.toggle('open', isOpen);
+        document.querySelectorAll('.dropdown-menu').forEach(m => { if (m !== menu) m.classList.remove('open'); });
+        document.querySelectorAll('.dropdown-trigger').forEach(t => { if (t !== trigger) t.classList.remove('open'); });
+      });
+    }
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.dropdown-trigger').forEach(t => t.classList.remove('open'));
+    });
+
+    async function initFilters() {
+      const res = await fetch(`${API}/filters`);
+      const { sectors, employer_sizes, reporting_periods } = await res.json();
+      buildDropdown('sector-menu', 'sector-trigger', 'sector-all', sectors, 'sectors', 'Sector');
+      buildDropdown('size-menu', 'size-trigger', 'size-all', employer_sizes, 'employerSizes', 'Size');
+      buildDropdown('period-menu', 'period-trigger', 'period-all', reporting_periods, 'reportingPeriods', 'Period');
+    }
 
     // ── Fetch ────────────────────────────────────────────────────────────────
 
@@ -382,10 +555,18 @@
         page_size: PAGE_SIZE,
         search:    state.search,
       });
+      state.sectors.forEach(s => params.append('sector', s));
+      state.employerSizes.forEach(s => params.append('employer_size', s));
+      state.reportingPeriods.forEach(s => params.append('reporting_period', s));
+
+      const countParams = new URLSearchParams({ search: state.search });
+      state.sectors.forEach(s => countParams.append('sector', s));
+      state.employerSizes.forEach(s => countParams.append('employer_size', s));
+      state.reportingPeriods.forEach(s => countParams.append('reporting_period', s));
 
       const [dataRes, countRes] = await Promise.all([
         fetch(`${API}/remuneration?${params}`),
-        fetch(`${API}/remuneration/count?search=${encodeURIComponent(state.search)}`),
+        fetch(`${API}/remuneration/count?${countParams}`),
       ]);
 
       const { data } = await dataRes.json();
@@ -397,18 +578,16 @@
     // ── Render ───────────────────────────────────────────────────────────────
 
     function fmt(val) {
-      if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
+      if (val === null || val === undefined) return '<span style="color:var(--muted)">&#8212;</span>';
       return '$' + val.toLocaleString('en-AU');
     }
 
     function renderTable(rows) {
       const tbody = document.getElementById('tbody');
-
       if (!rows.length) {
-        tbody.innerHTML = `<tr class="state-row"><td colspan="7">No results found.</td></tr>`;
+        tbody.innerHTML = '<tr class="state-row"><td colspan="7">No results found.</td></tr>';
         return;
       }
-
       tbody.innerHTML = rows.map(r => `
         <tr>
           <td class="company">${escHtml(r.company_name)}</td>
@@ -427,22 +606,17 @@
       const pg = document.getElementById('pagination');
       if (totalPages <= 1) { pg.innerHTML = ''; return; }
 
-      // Show at most 7 page buttons centred around current page
       let start = Math.max(1, state.page - 3);
       let end   = Math.min(totalPages, start + 6);
       if (end - start < 6) start = Math.max(1, end - 6);
 
-      let html = `<button id="pg-prev" ${state.page === 1 ? 'disabled' : ''}>← Prev</button>`;
-
-      if (start > 1) html += `<button onclick="goPage(1)">1</button><span class="page-info">…</span>`;
-
+      let html = `<button id="pg-prev" ${state.page === 1 ? 'disabled' : ''}>&#8592; Prev</button>`;
+      if (start > 1) html += `<button onclick="goPage(1)">1</button><span class="page-info">&#8230;</span>`;
       for (let i = start; i <= end; i++) {
         html += `<button onclick="goPage(${i})" class="${i === state.page ? 'active' : ''}">${i}</button>`;
       }
-
-      if (end < totalPages) html += `<span class="page-info">…</span><button onclick="goPage(${totalPages})">${totalPages}</button>`;
-
-      html += `<button id="pg-next" ${state.page === totalPages ? 'disabled' : ''}>Next →</button>`;
+      if (end < totalPages) html += `<span class="page-info">&#8230;</span><button onclick="goPage(${totalPages})">${totalPages}</button>`;
+      html += `<button id="pg-next" ${state.page === totalPages ? 'disabled' : ''}>Next &#8594;</button>`;
 
       pg.innerHTML = html;
       pg.querySelector('#pg-prev')?.addEventListener('click', () => goPage(state.page - 1));
@@ -454,11 +628,7 @@
         const col = th.dataset.col;
         const icon = th.querySelector('.sort-icon');
         th.classList.toggle('active', col === state.sortBy);
-        if (col === state.sortBy) {
-          icon.textContent = state.order === 'asc' ? '↑' : '↓';
-        } else {
-          icon.textContent = '↕';
-        }
+        icon.innerHTML = col === state.sortBy ? (state.order === 'asc' ? '&#8593;' : '&#8595;') : '&#8597;';
       });
     }
 
@@ -466,15 +636,14 @@
       const start = (state.page - 1) * PAGE_SIZE + 1;
       const end   = Math.min(state.page * PAGE_SIZE, state.total);
       document.getElementById('count-label').textContent =
-        state.total ? `${start}–${end} of ${state.total.toLocaleString()} companies` : '';
+        state.total ? `${start}\u2013${end} of ${state.total.toLocaleString()} companies` : '';
     }
 
     // ── Orchestrate ──────────────────────────────────────────────────────────
 
     async function load() {
       document.getElementById('tbody').innerHTML =
-        `<tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading…</td></tr>`;
-
+        '<tr class="state-row"><td colspan="7"><span class="spinner"></span> Loading&#8230;</td></tr>';
       const rows = await fetchData();
       renderTable(rows);
       renderPagination();
@@ -525,7 +694,7 @@
     }
 
     // ── Init ─────────────────────────────────────────────────────────────────
-    load();
+    initFilters().then(() => load());
   </script>
 </body>
 </html>
