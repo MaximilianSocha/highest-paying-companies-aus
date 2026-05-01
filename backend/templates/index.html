@@ -510,7 +510,10 @@
       }
 
       menu.addEventListener('change', e => {
-        if (menuId !== 'period-menu' && e.target === allCheck) return;
+        if (menuId !== 'period-menu' && e.target === allCheck) {
+          menu.querySelectorAll(`input[type="checkbox"][value="${e.target.value}"]`).forEach(cb => cb.checked = true);
+          return;
+        }
         const checked = [...menu.querySelectorAll('input[data-group="' + stateKey + '"]:checked')].map(c => c.value);
         if (checked.length === 0) {
           if (menuId === 'period-menu') {
